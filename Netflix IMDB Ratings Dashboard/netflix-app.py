@@ -160,7 +160,20 @@ fig_hm.show()
 
 ####################################################### Dash App Creation #######################################################
 
-table = netflix[['Title', 'Genre', 'Premiere', 'Runtime', 'IMDB Score', 'Language',
+# plotly 
+import plotly.express as px
+
+# dashboards
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import dash_table
+from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
+from datetime import date
+from dash.dependencies import Input, Output
+
+table = netflix.loc[:,['Title', 'Genre', 'Premiere', 'Runtime', 'IMDB Score', 'Language',
        'Rating Quality', 'Film Length Group', 'Release Year', 'RMonth Text']]
 table.rename(columns = {'RMonth Text':'Release Month'}, inplace = True)
 table['id'] = table['Title']
@@ -189,7 +202,7 @@ app.layout = html.Div([
 
 
     dbc.Tabs([
-        # Tab 1 Creation
+        #Tab 1 Creation
         dbc.Tab([
             html.H2('Netflix Originals: Summary Tab',
                      style={'color': 'maroon','fontSize': '20px','textAlign':'center'}),
@@ -217,7 +230,7 @@ app.layout = html.Div([
 
             ], label ='Performance Summary tab'),
         
-        # Tab 2 Creation
+        #Tab 2 Creation
         dbc.Tab([
             html.H1('Filterable Table of Netflix Originals',
                     style={'color': 'maroon','fontSize': '20px','textAlign':'center'}),
@@ -251,7 +264,7 @@ app.layout = html.Div([
 
             ], label ='Table of All Released Netflix Originals'),
         
-        # Tab 3 Creation
+        #Tab 3 Creation
         dbc.Tab([
             html.Div(
                     [dcc.Slider( id='year-slider',
@@ -260,23 +273,23 @@ app.layout = html.Div([
                         value=netflix['Release Year'].min(),
                         marks={str(year): str(year) for year in netflix['Release Year'].unique()},
                         step=None)            
-                ], style={'width': '100%', 'display': 'inline-block', 'padding': '0px 20px 20px 20px'}),
+                ], style={'width': '100%', 'display': 'inline-block', 'padding': 10}), #'0px 20px 20px 20px'
             
             html.Div(
                     [ dcc.Graph(id='tm-rating_qual'),
 
-                ],style={'width': '30%','display': 'inline-block', 'padding': '0px 20px 20px 20px'}),
+                ],style={'width': '30%','display': 'inline-block', 'padding': 30}),
 
             
             html.Div(
                     [ dcc.Graph(id='tm-genre'),
 
-                ],style={'width': '30%','display': 'inline-block', 'padding': '0px 20px 20px 20px'}),
+                ],style={'width': '30%','display': 'inline-block', 'padding': 30}),
 
             html.Div(
                     [ dcc.Graph(id='tm-length'),
 
-                ],style={'width': '30%','display': 'inline-block', 'padding': '0px 20px 20px 20px'}),             
+                ],style={'width': '30%','display': 'inline-block', 'padding': 30}),             
             
             
             html.Div(
@@ -293,13 +306,12 @@ app.layout = html.Div([
 
         ],label ='Year over Year Performance'), 
 
-        # Tab 4 Creation - Future Project Development
+
         # dbc.Tab([], label ='Dynamic k-Means Clustering')
 
     ]),
 ])
 
-### Call Back Functions
 @app.callback(
         Output('tm-genre', 'figure'),
         Input('year-slider', 'value'))
@@ -309,8 +321,9 @@ def update_tmgenre(year):
     df = pd.DataFrame(plotdata.Genre.value_counts()[:10])
     df.reset_index(inplace=True)
     fig = px.treemap(df, path=['index'], values='Genre')
-    fig.update_layout(title_text='Top 10 Genres of Films released in {}'.format(year),
-                    title_x=0.5, 
+    fig.update_layout(title_text='Top 10 Genres in {}'.format(year),
+                    title_x=0.5,
+                    width=550, 
                     title_font=dict(size=20))
     fig.update_traces(textinfo="label + value+percent parent")
     return fig
@@ -319,13 +332,14 @@ def update_tmgenre(year):
         Output('tm-length', 'figure'),
         Input('year-slider', 'value'))
 
-def update_tmgenre(year):
+def update_tmlength(year):
     plotdata = netflix.loc[netflix['Release Year']== year]
     df = pd.DataFrame(plotdata['Film Length Group'].value_counts())
     df.reset_index(inplace=True)
     fig = px.treemap(df, path=['index'], values='Film Length Group')
-    fig.update_layout(title_text='Breakdown of Length of Films released in {}'.format(year),
-                    title_x=0.5, 
+    fig.update_layout(title_text='Length of Films released in {}'.format(year),
+                    title_x=0.5,
+                    width=550, 
                     title_font=dict(size=20))
     fig.update_traces(textinfo="label + value+percent parent")
     return fig
@@ -335,13 +349,14 @@ def update_tmgenre(year):
         Output('tm-rating_qual', 'figure'),
         Input('year-slider', 'value'))
 
-def update_tmgenre(year):
+def update_tmrqual(year):
     plotdata = netflix.loc[netflix['Release Year']== year]
     df = pd.DataFrame(plotdata['Rating Quality'].value_counts())
     df.reset_index(inplace=True)
     fig = px.treemap(df, path=['index'], values='Rating Quality')
-    fig.update_layout(title_text='Breakdown of Rating Quality of Films released in {}'.format(year),
-                    title_x=0.5, 
+    fig.update_layout(title_text='Rating Quality of Films released in {}'.format(year),
+                    title_x=0.5,
+                    width=550,
                     title_font=dict(size=20))
     fig.update_traces(textinfo="label + value+percent parent")
     return fig
@@ -409,8 +424,8 @@ def update_scatter(year):
             bordercolor  = 'white',
             borderwidth = 0
         ),
-        width=1800,
-        height= 650,
+        width=1400,
+        height= 700,
         paper_bgcolor='white',
         plot_bgcolor='white',
         hovermode='closest',
@@ -469,4 +484,4 @@ def update_graphs(row_ids, selected_row_ids, active_cell):
         for column in ['Title', 'Genre', 'Premiere', 'Runtime', 'IMDB Score', 'Language', 'Rating Quality', 'Film Length Group', 'Release Year', 'Release Month'] if column in table
     ]
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, use_reloader=False)
